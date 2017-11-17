@@ -6,7 +6,7 @@ public class FTPClient {
 	public static void main(String[] args) throws Exception{
 		// TODO Auto-generated method stub
 		String command; 
-		String response = null;
+		String response = "";
 		
 		Socket clientSocket = new Socket("127.0.0.1", 9999);
 		
@@ -24,14 +24,17 @@ public class FTPClient {
 		
 		outToServer.writeBytes(command + '\n');
 		
-		String line = null;
+		String line = "";
 		//출력이 제대로 안된다.. 
-		do {
-		    line = inFromServer.readLine();
-		    response += line;
-		    System.out.println("read");
-		} while (line != null);
-		System.out.println("FROM SERVER: " + response);
+		while(true) {
+			line = inFromServer.readLine();
+			if(line.startsWith("[EndOfData]")) {
+				break;
+			}
+			response += (line+"\n");
+		}
+
+		System.out.println(response);
 		
 		clientSocket.close();
 	}

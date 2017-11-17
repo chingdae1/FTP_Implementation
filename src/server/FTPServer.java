@@ -23,6 +23,7 @@ public class FTPServer {
 			
 			if(clientCommand.startsWith("CD")) {
 				responseToClient = FTPServer.changeDirectory(clientCommand);
+				responseToClient += "\n";
 			}
 			else if(clientCommand.startsWith("LIST")) {
 				responseToClient = FTPServer.listFilesDirectories(clientCommand);
@@ -30,7 +31,7 @@ public class FTPServer {
 			else {
 				responseToClient = "??";
 			}
-			outToClient.writeBytes(responseToClient+'\n');
+			outToClient.writeBytes(responseToClient + "[EndOfData]\n");
 		}
 	}
 	
@@ -55,8 +56,8 @@ public class FTPServer {
 		else { 
 			String[] destinationDirectory = new String[2];
 			destinationDirectory = clientCommand.split("CD");
-			System.setProperty("user.dir", new File("..").getCanonicalPath() 
-											+ destinationDirectory[1].trim());
+			System.setProperty("user.dir", new File(".").getCanonicalPath() 
+											+ "/" + destinationDirectory[1].trim());
 		}
 		
 		return new File(".").getCanonicalPath();
