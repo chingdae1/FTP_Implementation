@@ -20,17 +20,17 @@ public class FTPServer {
 										   connectionSocket.getOutputStream());
 			
 			clientCommand = inFromClient.readLine();
-			
+			System.out.println(clientCommand);
 			if(clientCommand.startsWith("CD")) {
 				responseToClient = FTPServer.changeDirectory(clientCommand);
-				responseToClient += "\n";
 			}
 			else if(clientCommand.startsWith("LIST")) {
 				responseToClient = FTPServer.listFilesDirectories(clientCommand);
 			}
 			else {
-				responseToClient = "??";
+				responseToClient = "Invalid command.\n"; 
 			}
+			System.out.println(responseToClient+"\n\n");
 			outToClient.writeBytes(responseToClient + "[EndOfData]\n");
 		}
 	}
@@ -41,8 +41,13 @@ public class FTPServer {
 			//입력된 command 에서 path 파싱
 			String[] destinationPath = new String[2];
 			destinationPath = clientCommand.split("CD");
+			destinationPath[1] = destinationPath[1].trim();
+			//디렉토리 존재유무 확인 
+			if(!isDirectoryExists(destinationPath[1])) { 
+				return "Directory name is invalid.\n"; 
+			}
 			//working directory 변경 
-			System.setProperty("user.dir", destinationPath[1].trim());
+			System.setProperty("user.dir", destinationPath[1]);
 		} 
 		//상위 디렉토리로 이동
 		else if(clientCommand.startsWith("CD ..")) { 
@@ -54,19 +59,27 @@ public class FTPServer {
 		}
 		//상대경로를 통해 이동
 		else { 
+			//먼저 디렉토리 이름 파싱 
 			String[] destinationDirectory = new String[2];
 			destinationDirectory = clientCommand.split("CD");
-			System.setProperty("user.dir", new File(".").getCanonicalPath() 
+			//최종 목적지 경로 
+			String destinationPath = (new File(".").getCanonicalPath() 
 											+ "/" + destinationDirectory[1].trim());
+			//디렉토리 존재유무 확인 
+			if(!isDirectoryExists(destinationPath)) { 
+				return "Directory name is invalid.\n"; 
+			}
+			//working directory 변경
+			System.setProperty("user.dir", destinationPath);
 		}
 		
-		return new File(".").getCanonicalPath();
+		return new File(".").getCanonicalPath() + "/\n";
 	}
 	
 	public static String listFilesDirectories(String clientCommand) throws IOException {
 		//입력된 command 에서 path 파싱 
 		String[] path = new String[2];
-		path = clientCommand.split("LIST");
+		path = clientCommand.split("LIST"); 
 		path[1] = path[1].trim();
 		//'.'이 입렫된 경우 현재 경로로 바꿈 
 		if(path[1].equals(".")) {
@@ -76,9 +89,17 @@ public class FTPServer {
 		else if(path[1].equals("..")) {
 			path[1] = new File("..").getCanonicalPath();
 		}
+		//디렉토리 존재 유무 확인 
+		if(!isDirectoryExists(path[1])) {
+			return "Directory name is invalid.\n";
+		}
 		File directory = new File(path[1]);
 		//File배열에 타겟 path에 들어있는 모든 파일을 담음 
 		File[] fList = directory.listFiles();
+		//디렉토리가 비어있는 경우
+		if(fList.length == 0) {
+			return "Empty Directory.\n";
+		}
 		StringBuilder listOfFiles = new StringBuilder("");
 		StringBuilder listOfDirectories = new StringBuilder("");
 		//파일 리스트와 디렉토리 리스트를 각각 다른 StringBuilder 에 append
@@ -93,5 +114,13 @@ public class FTPServer {
 	    listOfFiles.append(listOfDirectories.toString());
 	    
 	    return listOfFiles.toString();
+	}
+	
+	private static boolean isDirectoryExists(String path) {
+		File dir = new File(path);
+		if(dir.isDirectory()){
+			return true;
+		}
+		return false;
 	}
 }

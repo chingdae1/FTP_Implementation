@@ -5,8 +5,6 @@ public class FTPClient {
 
 	public static void main(String[] args) throws Exception{
 		// TODO Auto-generated method stub
-		String command; 
-		String response = "";
 		
 		Socket clientSocket = new Socket("127.0.0.1", 9999);
 		
@@ -20,23 +18,34 @@ public class FTPClient {
 				                      new InputStreamReader(
 				                          clientSocket.getInputStream()));
 		
-		command = inFromUser.readLine();
-		
-		outToServer.writeBytes(command + '\n');
-		
-		String line = "";
-		//출력이 제대로 안된다.. 
 		while(true) {
-			line = inFromServer.readLine();
-			if(line.startsWith("[EndOfData]")) {
+			String command; 
+			String response = "";
+			
+			command = inFromUser.readLine();
+			if(command.equals("q")) {
 				break;
 			}
-			response += (line+"\n");
+			outToServer.writeBytes(command + '\n');
+			
+			String line = "";
+			System.out.println("command ==>" + command);
+			System.out.println("response ==>" + response);
+			while(true) {
+				line = inFromServer.readLine();
+				System.out.println("line ==>" + line);
+				if(line.startsWith("[EndOfData]")) {
+					break;
+				}
+				response += (line + "\n");
+			}
+			System.out.println(response);
 		}
-
-		System.out.println(response);
-		
 		clientSocket.close();
 	}
 
 }
+
+// to do list
+// 서버쓰레드로 구현.. 
+// 클라이언트에서 while 로 계속 command 보내기가 안 
